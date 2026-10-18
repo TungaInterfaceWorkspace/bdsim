@@ -174,7 +174,9 @@ class Plug(Port):
 
     __array_ufunc__ = None  # allow block operators with NumPy values
 
-    def __init__(self, block: Block, port: int | slice = 0, type: str | None = None) -> None:
+    def __init__(
+        self, block: Block, port: int | slice = 0, type: str | None = None
+    ) -> None:
         self.block: Block = block
         self.port: int | slice = port
         self.type: str = type or ""
