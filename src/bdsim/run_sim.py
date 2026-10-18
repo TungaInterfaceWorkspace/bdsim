@@ -2440,7 +2440,7 @@ class BDSim(Runner):
             params = {}
             if "param" in dict:
                 for var, descrip in dict["param"].items():
-                    typ = dict["type"].get(var, None)
+                    typ = dict.get("type", {}).get(var, None)
                     params[var] = (typ, descrip)
 
             return params

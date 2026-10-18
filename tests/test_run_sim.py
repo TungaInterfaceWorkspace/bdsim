@@ -1219,6 +1219,53 @@ class MetadataTest(unittest.TestCase):
         self.assertEqual(all_info, self.sim._blocklibrary)
 
 
+class DocstringParamWithoutTypeTest(unittest.TestCase):
+    """Regression test for issue #129.
+
+    load_blocks()/parse_docstring() must not crash on a block whose
+    docstring has ``:param`` entries but no matching ``:type`` entry,
+    which is the convention used by roboticstoolbox/machinevisiontoolbox
+    blocks when the type is already clear from the signature.
+    """
+
+    def test_param_without_type_does_not_raise(self):
+        module_source = '''
+class Widget(FunctionBlock):
+    """
+    :blockname:`WIDGET`
+
+    Widget block used to test docstring parsing when :type is absent.
+    """
+
+    nin = 1
+    nout = 1
+
+    def __init__(self, L=1, **blockargs):
+        """
+        :param L: wheelbase length, no :type field provided
+        """
+        super().__init__(**blockargs)
+'''
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (Path(tmpdir) / "widget.py").write_text(module_source)
+            sim = BDSim(
+                graphics=None,
+                progress=False,
+                banner=False,
+                load=False,
+                packages=tmpdir,
+            )
+            # Should not raise KeyError: 'type' (see issue #129)
+            blocks = sim.load_blocks(verbose=False, toolboxes=False)
+
+            self.assertIn("WIDGET", blocks)
+            params = blocks["WIDGET"]["params"]
+            self.assertIn("L", params)
+            typ, descrip = params["L"]
+            self.assertIsNone(typ)
+            self.assertIn("wheelbase", descrip)
+
+
 class DebugEnvironmentTest(unittest.TestCase):
     """Tests for debug environment variables (optional, visual verification)."""
 
